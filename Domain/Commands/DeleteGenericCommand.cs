@@ -1,18 +1,15 @@
 ﻿using MediatR;
+using Domain.Models;
 
-namespace Domain.Commands;
-
-/// <summary>
-/// Generic command for deleting entities by ID
-/// </summary>
-/// <typeparam name="TEntity">The entity type to delete</typeparam>
-public class DeleteGenericCommand<TEntity> : IRequest<bool> where TEntity : class
+namespace Domain.Commands
 {
-    public Guid Id { get; set; }
-
-    public DeleteGenericCommand(Guid id, string deletedBy = "system", bool hardDelete = false)
+    public class DeleteGenericCommand<T> : IRequest<bool> where T : BaseEntity
     {
-        Id = id;
+        public int Id { get; set; }
 
+        public DeleteGenericCommand(int id)
+        {
+            Id = id;
+        }
     }
 }

@@ -1,17 +1,15 @@
 ﻿using MediatR;
+using Domain.Models;
 
-namespace Domain.Queries;
-
-/// <summary>
-/// Generic query for retrieving a single entity by ID
-/// </summary>
-/// <typeparam name="TDto">The DTO type to return</typeparam>
-public class GetGenericQuery<TDto> : IRequest<TDto> where TDto : class
+namespace Domain.Queries
 {
-    public Guid Id { get; set; }
-
-    public GetGenericQuery(Guid id)
+    public class GetGenericQuery<T> : IRequest<T?> where T : BaseEntity
     {
-        Id = id;
+        public int Id { get; set; }
+
+        public GetGenericQuery(int id)
+        {
+            Id = id;
+        }
     }
 }

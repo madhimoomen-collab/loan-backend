@@ -1,67 +1,57 @@
-﻿using Domain.Models;
-using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
-using System.Reflection.Emit;
+﻿using Microsoft.EntityFrameworkCore;
+using Domain.Models;
 
-namespace Domain.Context;
-
-/// <summary>
-/// Base application database context
-/// Override this in your Data layer to add your specific DbSets
-/// </summary>
-public abstract class ApplicationDbContext : DbContext
+namespace Data.Context
 {
-    public ApplicationDbContext(DbContextOptions options) : base(options)
+    public class ApplicationDbContext : DbContext
     {
-    }
-
-    /// <summary>
-    /// Override SaveChanges to automatically set audit fields
-    /// </summary>
-    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-    {
-        var entries = ChangeTracker
-            .Entries()
-            .Where(e => e.Entity is BaseEntity && (
-                e.State == EntityState.Added ||
-                e.State == EntityState.Modified));
-
-        foreach (var entityEntry in entries)
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+            : base(options)
         {
-            var entity = (BaseEntity)entityEntry.Entity;
-
-            if (entityEntry.State == EntityState.Added)
-            {
-                entity.CreatedAt = DateTime.UtcNow;
-            }
-
-            if (entityEntry.State == EntityState.Modified)
-            {
-                entity.UpdatedAt = DateTime.UtcNow;
-            }
         }
 
-        return await base.SaveChangesAsync(cancellationToken);
-    }
+        public DbSet<Book> Books { get; set; }
 
-    /// <summary>
-    /// Override OnModelCreating to configure soft delete global query filter
-    /// </summary>
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
-        base.OnModelCreating(modelBuilder);
-
-        // Apply global query filter for soft delete
-        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            if (typeof(BaseEntity).IsAssignableFrom(entityType.ClrType))
-            {
-                var parameter = Expression.Parameter(entityType.ClrType, "e");
-                var property = Expression.Property(parameter, nameof(BaseEntity.IsDeleted));
-                var filter = Expression.Lambda(Expression.Equal(property, Expression.Constant(false)), parameter);
+            base.OnModelCreating(modelBuilder);
 
-                entityType.SetQueryFilter(filter);
-            }
+            modelBuilder.Entity<Book>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.ISBN).IsRequired().HasMaxLength(20);
+                entity.Property(e => e.Author).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Category).HasMaxLength(50);
+                entity.HasQueryFilter(b => !b.IsDeleted);
+                entity.HasIndex(e => e.ISBN).IsUnique();
+            });
+
+            // FIX APPLIED BELOW: Replaced 'DateTime.Now' with static 'new DateTime(...)'
+            modelBuilder.Entity<Book>().HasData(
+                new Book
+                {
+                    Id = 1,
+                    Title = "Clean Code",
+                    ISBN = "978-0132350884",
+                    Author = "Robert C. Martin",
+                    PublishedDate = new DateTime(2008, 8, 1),
+                    Category = "Programming",
+                    AvailableCopies = 5,
+                    CreatedDate = new DateTime(2024, 1, 1) // Fixed: Static Date
+                },
+                new Book
+                {
+                    Id = 2,
+                    Title = "Design Patterns",
+                    ISBN = "978-0201633612",
+                    Author = "Gang of Four",
+                    PublishedDate = new DateTime(1994, 10, 31),
+                    Category = "Software Engineering",
+                    AvailableCopies = 3,
+                    CreatedDate = new DateTime(2024, 1, 1) // Fixed: Static Date
+                }
+            );
         }
     }
 }

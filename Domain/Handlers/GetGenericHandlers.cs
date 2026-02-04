@@ -1,71 +1,25 @@
-﻿using Domain.Interface;
+﻿using MediatR;
 using Domain.Queries;
-using MediatR;
+using Domain.Interface;
+using Domain.Models;
+using System.Threading;
+using System.Threading.Tasks;
 
-namespace Domain.Handlers;
-
-/// <summary>
-/// Generic handler for Get single entity queries
-/// </summary>
-/// <typeparam name="TEntity">Entity type from domain</typeparam>
-/// <typeparam name="TDto">DTO type for response</typeparam>
-public class GetGenericHandlers<TEntity, TDto> : IRequestHandler<GetGenericQuery<TDto>, TDto>
-    where TEntity : class
-    where TDto : class
+namespace Domain.Handlers
 {
-    private readonly IGenericRepository<TEntity> _repository;
-    private readonly IMapper<TEntity, TDto> _mapper;
-
-    public GetGenericHandlers(
-        IGenericRepository<TEntity> repository,
-        IMapper<TEntity, TDto> mapper)
+    public class GetGenericHandler<T> : IRequestHandler<GetGenericQuery<T>, T?>
+        where T : BaseEntity
     {
-        _repository = repository;
-        _mapper = mapper;
-    }
+        private readonly IGenericRepository<T> _repository;
 
-    public async Task<TDto> Handle(GetGenericQuery<TDto> request, CancellationToken cancellationToken)
-    {
-        try
+        public GetGenericHandler(IGenericRepository<T> repository)
         {
-            // Get entity by ID
-            var entity = await _repository.GetByIdAsync(request.Id, cancellationToken);
-
-            if (entity == null)
-            {
-                throw new KeyNotFoundException($"Entity with ID {request.Id} not found");
-            }
-
-            // Check if entity is soft deleted
-            if (!request.IncludeDeleted && IsDeleted(entity))
-            {
-                throw new KeyNotFoundException($"Entity with ID {request.Id} not found or has been deleted");
-            }
-
-            // Map to DTO and return
-            return _mapper.MapToDto(entity);
-        }
-        catch (KeyNotFoundException)
-        {
-            throw;
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"Error retrieving entity: {ex.Message}", ex);
-        }
-    }
-
-    private bool IsDeleted(TEntity entity)
-    {
-        var entityType = entity.GetType();
-        var isDeletedProperty = entityType.GetProperty("IsDeleted");
-
-        if (isDeletedProperty != null && isDeletedProperty.PropertyType == typeof(bool))
-        {
-            var value = isDeletedProperty.GetValue(entity);
-            return value != null && (bool)value;
+            _repository = repository;
         }
 
-        return false;
+        public async Task<T?> Handle(GetGenericQuery<T> request, CancellationToken cancellationToken)
+        {
+            return await _repository.GetByIdAsync(request.Id);
+        }
     }
 }

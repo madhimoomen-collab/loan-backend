@@ -2,24 +2,26 @@
 using Domain.Commands;
 using Domain.Interface;
 using Domain.Models;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Domain.Handlers
 {
-    public class AddGenericHandler<T> : IRequestHandler<AddGenericCommand<T>, T>
+    public class UpdateGenericHandler<T> : IRequestHandler<UpdateGenericCommand<T>, T>
         where T : BaseEntity
     {
         private readonly IGenericRepository<T> _repository;
 
-        public AddGenericHandler(IGenericRepository<T> repository)
+        public UpdateGenericHandler(IGenericRepository<T> repository)
         {
             _repository = repository;
         }
 
-        public async Task<T> Handle(AddGenericCommand<T> request, CancellationToken cancellationToken)
+        public async Task<T> Handle(UpdateGenericCommand<T> request, CancellationToken cancellationToken)
         {
-            var result = await _repository.AddAsync(request.Entity);
+            request.Entity.UpdatedDate = DateTime.Now;
+            var result = await _repository.UpdateAsync(request.Entity);
             await _repository.SaveChangesAsync();
             return result;
         }

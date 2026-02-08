@@ -1,12 +1,15 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using AutoMapper;
 using Data.Context;
-using Domain.Interface;
 using Data.Repositories;
+using Domain.Commands;
+using Domain.DTOs;
 using Domain.Handlers;
+using Domain.Interface;
+using Domain.Mappings;
 using Domain.Models;
 using Domain.Queries;
-using Domain.Commands;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,14 +44,20 @@ builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssembly(typeof(Book).Assembly);
 });
 
-// 6. Register Generic Handlers Explicitly (THE FIX!)
+// 6. Register Generic Handlers Explicitly
 builder.Services.AddScoped<IRequestHandler<GetListGenericQuery<Book>, IEnumerable<Book>>, GetListGenericHandler<Book>>();
-builder.Services.AddScoped<IRequestHandler<GetGenericQuery<Book>, Book>, GetGenericHandler<Book>>();
+builder.Services.AddScoped<IRequestHandler<GetGenericQuery<Book>, Book?>, GetGenericHandler<Book>>();
 builder.Services.AddScoped<IRequestHandler<AddGenericCommand<Book>, Book>, AddGenericHandler<Book>>();
 builder.Services.AddScoped<IRequestHandler<UpdateGenericCommand<Book>, Book>, UpdateGenericHandler<Book>>();
 builder.Services.AddScoped<IRequestHandler<DeleteGenericCommand<Book>, bool>, DeleteGenericHandler<Book>>();
 
-// 7. Add CORS
+// 6.1 Register GetBooksByClientHandler
+builder.Services.AddScoped<IRequestHandler<GetBooksByClientQuery, IEnumerable<BookDto>>, GetBooksByClientHandler>();
+
+// 7. Register AutoMapper manually (AutoMapper 13+)
+builder.Services.AddAutoMapper(typeof(BookMappingProfile));
+
+// 8. Add CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -59,14 +68,14 @@ builder.Services.AddCors(options =>
     });
 });
 
-// 8. Logging
+// 9. Logging
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
 
 var app = builder.Build();
 
-// 9. Configure Middleware
+// 10. Configure Middleware
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {

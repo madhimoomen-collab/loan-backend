@@ -11,6 +11,8 @@ namespace Data.Context
         }
 
         public DbSet<Book> Books { get; set; }
+        public DbSet<Client> Clients { get; set; }
+        public DbSet<ClientBook> ClientBooks { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -27,7 +29,26 @@ namespace Data.Context
                 entity.HasIndex(e => e.ISBN).IsUnique();
             });
 
-            // FIX APPLIED BELOW: Replaced 'DateTime.Now' with static 'new DateTime(...)'
+            modelBuilder.Entity<ClientBook>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                // Add UNIQUE constraint on ClientId + BookId
+                entity.HasIndex(e => new { e.ClientId, e.BookId }).IsUnique();
+
+                entity.HasOne(cb => cb.Client)
+                      .WithMany()
+                      .HasForeignKey(cb => cb.ClientId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(cb => cb.Book)
+                      .WithMany()
+                      .HasForeignKey(cb => cb.BookId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasQueryFilter(cb => !cb.IsDeleted);
+            });
+
             modelBuilder.Entity<Book>().HasData(
                 new Book
                 {
@@ -38,7 +59,7 @@ namespace Data.Context
                     PublishedDate = new DateTime(2008, 8, 1),
                     Category = "Programming",
                     AvailableCopies = 5,
-                    CreatedDate = new DateTime(2024, 1, 1) // Fixed: Static Date
+                    CreatedDate = new DateTime(2024, 1, 1)
                 },
                 new Book
                 {
@@ -49,7 +70,7 @@ namespace Data.Context
                     PublishedDate = new DateTime(1994, 10, 31),
                     Category = "Software Engineering",
                     AvailableCopies = 3,
-                    CreatedDate = new DateTime(2024, 1, 1) // Fixed: Static Date
+                    CreatedDate = new DateTime(2024, 1, 1)
                 }
             );
         }

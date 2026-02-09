@@ -3,6 +3,7 @@ using Domain.Models;
 using Domain.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace API.Controllers
 {
@@ -62,6 +63,36 @@ namespace API.Controllers
         {
             _logger.LogInformation("Client {ClientId} borrowing Book {BookId}",
                 clientBook.ClientId, clientBook.BookId);
+
+            // ADDED: Validate that client doesn't already have an unreturned copy of this book
+            var existingBorrowingQuery = new GetListGenericQuery<ClientBook>(
+                condition: cb => cb.ClientId == clientBook.ClientId
+                    && cb.BookId == clientBook.BookId
+                    && !cb.IsReturned,
+                includes: q => q.Include(cb => cb.Book)
+            );
+            var existingBorrowings = await _mediator.Send(existingBorrowingQuery);
+
+            if (existingBorrowings.Any())
+            {
+                var borrowedBook = existingBorrowings.First().Book;
+                return BadRequest($"Client already has an unreturned copy of '{borrowedBook?.Title}'. " +
+                    "They must return it before borrowing again.");
+            }
+
+            // ADDED: Validate book availability
+            var bookQuery = new GetGenericQuery<Book>(clientBook.BookId);
+            var book = await _mediator.Send(bookQuery);
+
+            if (book == null)
+            {
+                return BadRequest($"Book with ID {clientBook.BookId} not found.");
+            }
+
+            if (book.AvailableCopies <= 0)
+            {
+                return BadRequest($"No copies of '{book.Title}' are currently available.");
+            }
 
             // Set default values if not provided
             if (clientBook.BorrowedDate == default)
@@ -149,6 +180,49 @@ namespace API.Controllers
             }
 
             return NoContent();
+        }
+
+        /// <summary>
+        /// Get all currently borrowed books (unreturned)
+        /// </summary>
+        [HttpGet("active")]
+        [ProducesResponseType(typeof(IEnumerable<ClientBook>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<IEnumerable<ClientBook>>> GetActiveBorrowings()
+        {
+            _logger.LogInformation("Getting all active borrowings");
+
+            var query = new GetListGenericQuery<ClientBook>(
+                condition: cb => !cb.IsReturned,
+                includes: q => q
+                    .Include(cb => cb.Client)
+                    .Include(cb => cb.Book),
+                orderBy: q => q.OrderBy(cb => cb.DueDate)
+            );
+
+            var result = await _mediator.Send(query);
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Get all overdue books
+        /// </summary>
+        [HttpGet("overdue")]
+        [ProducesResponseType(typeof(IEnumerable<ClientBook>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<IEnumerable<ClientBook>>> GetOverdueBorrowings()
+        {
+            _logger.LogInformation("Getting all overdue borrowings");
+
+            var now = DateTime.Now;
+            var query = new GetListGenericQuery<ClientBook>(
+                condition: cb => !cb.IsReturned && cb.DueDate < now,
+                includes: q => q
+                    .Include(cb => cb.Client)
+                    .Include(cb => cb.Book),
+                orderBy: q => q.OrderBy(cb => cb.DueDate)
+            );
+
+            var result = await _mediator.Send(query);
+            return Ok(result);
         }
     }
 }

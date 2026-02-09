@@ -24,7 +24,7 @@ namespace Domain.Queries
         /// Include related entities (supports ThenInclude chains)
         /// Example: query => query.Include(x => x.Book).Include(x => x.Client)
         /// </summary>
-        public Func<IQueryable<T>, IIncludableQueryable<T, object>>? Includes { get; }
+        public Func<IQueryable<T>, IIncludableQueryable<T, object?>>? Includes { get; }
 
         /// <summary>
         /// Optional ordering
@@ -40,7 +40,7 @@ namespace Domain.Queries
         /// <param name="orderBy">Optional ordering</param>
         public GetListGenericQuery(
             Expression<Func<T, bool>>? condition = null,
-            Func<IQueryable<T>, IIncludableQueryable<T, object>>? includes = null,
+            Func<IQueryable<T>, IIncludableQueryable<T, object?>>? includes = null,
             Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null)
         {
             Condition = condition;

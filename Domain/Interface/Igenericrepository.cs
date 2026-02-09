@@ -43,7 +43,7 @@ namespace Domain.Interface
         /// </summary>
         Task<IEnumerable<T>> FindAsync(
             Expression<Func<T, bool>>? predicate = null,
-            Func<IQueryable<T>, IIncludableQueryable<T, object>>? includes = null,
+            Func<IQueryable<T>, IIncludableQueryable<T, object?>>? includes = null,
             Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null);
 
         /// <summary>
@@ -51,7 +51,7 @@ namespace Domain.Interface
         /// </summary>
         Task<T?> GetAsync(
             Expression<Func<T, bool>> predicate,
-            Func<IQueryable<T>, IIncludableQueryable<T, object>>? includes = null);
+            Func<IQueryable<T>, IIncludableQueryable<T, object?>>? includes = null);
 
         /// <summary>
         /// Add a new entity

@@ -22,7 +22,7 @@ namespace Domain.Queries
         /// Include related entities (supports ThenInclude chains)
         /// Example: query => query.Include(x => x.Client).ThenInclude(c => c.Address)
         /// </summary>
-        public Func<IQueryable<T>, IIncludableQueryable<T, object>>? Includes { get; }
+        public Func<IQueryable<T>, IIncludableQueryable<T, object?>>? Includes { get; }
 
         /// <summary>
         /// Constructor for flexible querying
@@ -31,7 +31,7 @@ namespace Domain.Queries
         /// <param name="includes">Optional includes for eager loading</param>
         public GetGenericQuery(
             Expression<Func<T, bool>> condition,
-            Func<IQueryable<T>, IIncludableQueryable<T, object>>? includes = null)
+            Func<IQueryable<T>, IIncludableQueryable<T, object?>>? includes = null)
         {
             Condition = condition ?? throw new ArgumentNullException(nameof(condition));
             Includes = includes;

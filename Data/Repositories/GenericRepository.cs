@@ -98,7 +98,7 @@ namespace Data.Repositories
         /// </summary>
         public async Task<IEnumerable<T>> FindAsync(
             Expression<Func<T, bool>>? predicate = null,
-            Func<IQueryable<T>, IIncludableQueryable<T, object>>? includes = null,
+            Func<IQueryable<T>, IIncludableQueryable<T, object?>>? includes = null,
             Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null)
         {
             IQueryable<T> query = _dbSet;
@@ -129,7 +129,7 @@ namespace Data.Repositories
         /// </summary>
         public async Task<T?> GetAsync(
             Expression<Func<T, bool>> predicate,
-            Func<IQueryable<T>, IIncludableQueryable<T, object>>? includes = null)
+            Func<IQueryable<T>, IIncludableQueryable<T, object?>>? includes = null)
         {
             IQueryable<T> query = _dbSet;
 

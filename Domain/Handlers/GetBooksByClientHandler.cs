@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-
+#nullable disable warnings
 namespace Domain.Handlers
 {
     public class GetBooksByClientHandler : IRequestHandler<GetBooksByClientQuery, IEnumerable<BookDto>>

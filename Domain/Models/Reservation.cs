@@ -56,6 +56,17 @@ namespace Domain.Models
         public string? Notes { get; set; }
 
         /// <summary>
+        /// NEW: Link to the ClientBook record created when this reservation was picked up
+        /// This tracks which borrowing came from this reservation
+        /// </summary>
+        public int? ClientBookId { get; set; }
+
+        /// <summary>
+        /// NEW: Navigation property to the borrowing record created from this reservation
+        /// </summary>
+        public ClientBook? ClientBook { get; set; }
+
+        /// <summary>
         /// Calculated property: Is this reservation expired?
         /// </summary>
         public bool IsExpired => Status == ReservationStatus.Active && DateTime.Now > ExpiryDate;

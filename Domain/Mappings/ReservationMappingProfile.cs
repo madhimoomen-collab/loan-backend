@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using Domain.DTOs;
 using Domain.Models;
-
+#nullable disable warnings
 namespace Domain.Mappings
 {
     /// <summary>

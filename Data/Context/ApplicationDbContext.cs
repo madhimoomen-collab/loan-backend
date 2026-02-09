@@ -13,7 +13,7 @@ namespace Data.Context
         public DbSet<Book> Books { get; set; }
         public DbSet<Client> Clients { get; set; }
         public DbSet<ClientBook> ClientBooks { get; set; }
-        public DbSet<Reservation> Reservations { get; set; } // NEW
+        public DbSet<Reservation> Reservations { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -46,11 +46,25 @@ namespace Data.Context
                 entity.HasIndex(e => e.Email).IsUnique();
             });
 
-            // Configure ClientBook Entity (Junction Table)
+            // ========================================
+            // FIXED: Configure ClientBook Entity
+            // ========================================
             modelBuilder.Entity<ClientBook>(entity =>
             {
                 entity.HasKey(e => e.Id);
-                entity.HasIndex(e => new { e.ClientId, e.BookId }).IsUnique();
+
+                // REMOVED: Unique constraint on (ClientId, BookId)
+                // This allows clients to borrow the same book multiple times
+
+                // Added separate indexes for query performance
+                entity.HasIndex(e => e.ClientId);
+                entity.HasIndex(e => e.BookId);
+
+                // ADDED: Filtered unique index to prevent concurrent borrowings
+                // A client cannot borrow the same book twice while it's still unreturned
+                entity.HasIndex(e => new { e.ClientId, e.BookId, e.IsReturned })
+                    .HasFilter("[IsReturned] = 0 AND [IsDeleted] = 0")
+                    .HasDatabaseName("IX_ClientBooks_ClientId_BookId_IsReturned");
 
                 entity.HasOne(cb => cb.Client)
                       .WithMany()
@@ -65,7 +79,9 @@ namespace Data.Context
                 entity.HasQueryFilter(cb => !cb.IsDeleted);
             });
 
-            // Configure Reservation Entity (NEW)
+            // ========================================
+            // FIXED: Configure Reservation Entity
+            // ========================================
             modelBuilder.Entity<Reservation>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -75,7 +91,7 @@ namespace Data.Context
                 entity.Property(e => e.Status).IsRequired();
                 entity.Property(e => e.Notes).HasMaxLength(500);
 
-                // Relationships
+                // Relationships to Client and Book
                 entity.HasOne(r => r.Client)
                       .WithMany()
                       .HasForeignKey(r => r.ClientId)
@@ -85,6 +101,18 @@ namespace Data.Context
                       .WithMany()
                       .HasForeignKey(r => r.BookId)
                       .OnDelete(DeleteBehavior.Restrict);
+
+                // NEW: Relationship to ClientBook (optional, set when reservation is picked up)
+                entity.HasOne(r => r.ClientBook)
+                      .WithOne()
+                      .HasForeignKey<Reservation>(r => r.ClientBookId)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .IsRequired(false);
+
+                // Create unique index on ClientBookId (when not null)
+                entity.HasIndex(e => e.ClientBookId)
+                      .IsUnique()
+                      .HasFilter("[ClientBookId] IS NOT NULL");
 
                 // Indexes for performance
                 entity.HasIndex(e => e.ClientId);

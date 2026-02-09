@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 
 namespace Domain.Handlers
 {
+    /// <summary>
+    /// Updated handler to support flexible Expression-based queries
+    /// </summary>
     public class GetGenericHandler<T> : IRequestHandler<GetGenericQuery<T>, T?>
         where T : BaseEntity
     {
@@ -19,7 +22,8 @@ namespace Domain.Handlers
 
         public async Task<T?> Handle(GetGenericQuery<T> request, CancellationToken cancellationToken)
         {
-            return await _repository.GetByIdAsync(request.Id);
+            // Use the new GetAsync method with IIncludableQueryable support
+            return await _repository.GetAsync(request.Condition, request.Includes);
         }
     }
 }

@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 
 namespace Domain.Handlers
 {
+    /// <summary>
+    /// Updated handler to support flexible Expression-based list queries
+    /// </summary>
     public class GetListGenericHandler<T> : IRequestHandler<GetListGenericQuery<T>, IEnumerable<T>>
         where T : BaseEntity
     {
@@ -20,7 +23,12 @@ namespace Domain.Handlers
 
         public async Task<IEnumerable<T>> Handle(GetListGenericQuery<T> request, CancellationToken cancellationToken)
         {
-            return await _repository.GetAllAsync();
+            // Use the new advanced FindAsync method with IIncludableQueryable support
+            return await _repository.FindAsync(
+                predicate: request.Condition,
+                includes: request.Includes,
+                orderBy: request.OrderBy
+            );
         }
     }
 }

@@ -51,7 +51,14 @@ builder.Services.AddScoped<IRequestHandler<AddGenericCommand<Book>, Book>, AddGe
 builder.Services.AddScoped<IRequestHandler<UpdateGenericCommand<Book>, Book>, UpdateGenericHandler<Book>>();
 builder.Services.AddScoped<IRequestHandler<DeleteGenericCommand<Book>, bool>, DeleteGenericHandler<Book>>();
 
-// 6.1 Register GetBooksByClientHandler
+// 6.1 Register Generic Handlers for Client
+builder.Services.AddScoped<IRequestHandler<GetListGenericQuery<Client>, IEnumerable<Client>>, GetListGenericHandler<Client>>();
+builder.Services.AddScoped<IRequestHandler<GetGenericQuery<Client>, Client?>, GetGenericHandler<Client>>();
+builder.Services.AddScoped<IRequestHandler<AddGenericCommand<Client>, Client>, AddGenericHandler<Client>>();
+builder.Services.AddScoped<IRequestHandler<UpdateGenericCommand<Client>, Client>, UpdateGenericHandler<Client>>();
+builder.Services.AddScoped<IRequestHandler<DeleteGenericCommand<Client>, bool>, DeleteGenericHandler<Client>>();
+
+// 6.2 Register GetBooksByClientHandler
 builder.Services.AddScoped<IRequestHandler<GetBooksByClientQuery, IEnumerable<BookDto>>, GetBooksByClientHandler>();
 
 // 7. Register AutoMapper manually (AutoMapper 13+)

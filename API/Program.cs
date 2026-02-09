@@ -35,34 +35,40 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         b => b.MigrationsAssembly("Data")
     ));
 
-// 4. Register Repository
+// 4. Register Generic Repository
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
-// 5. Register MediatR
+// 5. Register MediatR - This finds the handlers but doesn't auto-register generics in v12+
 builder.Services.AddMediatR(cfg =>
 {
     cfg.RegisterServicesFromAssembly(typeof(Book).Assembly);
 });
 
-// 6. Register Generic Handlers Explicitly
+// 6. IMPORTANT: Manually register generic handlers for each entity
+// This is necessary for MediatR 12+ with open generic handlers
+// Book handlers
 builder.Services.AddScoped<IRequestHandler<GetListGenericQuery<Book>, IEnumerable<Book>>, GetListGenericHandler<Book>>();
 builder.Services.AddScoped<IRequestHandler<GetGenericQuery<Book>, Book?>, GetGenericHandler<Book>>();
 builder.Services.AddScoped<IRequestHandler<AddGenericCommand<Book>, Book>, AddGenericHandler<Book>>();
 builder.Services.AddScoped<IRequestHandler<UpdateGenericCommand<Book>, Book>, UpdateGenericHandler<Book>>();
 builder.Services.AddScoped<IRequestHandler<DeleteGenericCommand<Book>, bool>, DeleteGenericHandler<Book>>();
 
-// 6.1 Register Generic Handlers for Client
+// Client handlers
 builder.Services.AddScoped<IRequestHandler<GetListGenericQuery<Client>, IEnumerable<Client>>, GetListGenericHandler<Client>>();
 builder.Services.AddScoped<IRequestHandler<GetGenericQuery<Client>, Client?>, GetGenericHandler<Client>>();
 builder.Services.AddScoped<IRequestHandler<AddGenericCommand<Client>, Client>, AddGenericHandler<Client>>();
 builder.Services.AddScoped<IRequestHandler<UpdateGenericCommand<Client>, Client>, UpdateGenericHandler<Client>>();
 builder.Services.AddScoped<IRequestHandler<DeleteGenericCommand<Client>, bool>, DeleteGenericHandler<Client>>();
 
-// 6.2 Register GetBooksByClientHandler
-builder.Services.AddScoped<IRequestHandler<GetBooksByClientQuery, IEnumerable<BookDto>>, GetBooksByClientHandler>();
+// ClientBook handlers
+builder.Services.AddScoped<IRequestHandler<GetListGenericQuery<ClientBook>, IEnumerable<ClientBook>>, GetListGenericHandler<ClientBook>>();
+builder.Services.AddScoped<IRequestHandler<GetGenericQuery<ClientBook>, ClientBook?>, GetGenericHandler<ClientBook>>();
+builder.Services.AddScoped<IRequestHandler<AddGenericCommand<ClientBook>, ClientBook>, AddGenericHandler<ClientBook>>();
+builder.Services.AddScoped<IRequestHandler<UpdateGenericCommand<ClientBook>, ClientBook>, UpdateGenericHandler<ClientBook>>();
+builder.Services.AddScoped<IRequestHandler<DeleteGenericCommand<ClientBook>, bool>, DeleteGenericHandler<ClientBook>>();
 
-// 7. Register AutoMapper manually (AutoMapper 13+)
-builder.Services.AddAutoMapper(typeof(BookMappingProfile));
+// 7. Register AutoMapper
+builder.Services.AddAutoMapper(typeof(BookMappingProfile).Assembly);
 
 // 8. Add CORS
 builder.Services.AddCors(options =>

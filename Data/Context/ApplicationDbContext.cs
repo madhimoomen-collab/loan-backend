@@ -18,6 +18,7 @@ namespace Data.Context
         {
             base.OnModelCreating(modelBuilder);
 
+            // Configure Book Entity
             modelBuilder.Entity<Book>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -25,17 +26,39 @@ namespace Data.Context
                 entity.Property(e => e.ISBN).IsRequired().HasMaxLength(20);
                 entity.Property(e => e.Author).IsRequired().HasMaxLength(100);
                 entity.Property(e => e.Category).HasMaxLength(50);
+
+                // Global query filter for soft delete
                 entity.HasQueryFilter(b => !b.IsDeleted);
+
                 entity.HasIndex(e => e.ISBN).IsUnique();
             });
 
+            // Configure Client Entity
+            modelBuilder.Entity<Client>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.FirstName).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.LastName).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Email).IsRequired().HasMaxLength(150);
+                entity.Property(e => e.PhoneNumber).HasMaxLength(20);
+                entity.Property(e => e.Address).HasMaxLength(300);
+
+                // FIXED: Added query filter for soft delete (was missing!)
+                entity.HasQueryFilter(c => !c.IsDeleted);
+
+                // Add unique constraint on Email
+                entity.HasIndex(e => e.Email).IsUnique();
+            });
+
+            // Configure ClientBook Entity (Junction Table)
             modelBuilder.Entity<ClientBook>(entity =>
             {
                 entity.HasKey(e => e.Id);
 
-                // Add UNIQUE constraint on ClientId + BookId
+                // UNIQUE constraint on ClientId + BookId to prevent duplicate borrowing
                 entity.HasIndex(e => new { e.ClientId, e.BookId }).IsUnique();
 
+                // Configure relationships
                 entity.HasOne(cb => cb.Client)
                       .WithMany()
                       .HasForeignKey(cb => cb.ClientId)
@@ -46,9 +69,11 @@ namespace Data.Context
                       .HasForeignKey(cb => cb.BookId)
                       .OnDelete(DeleteBehavior.Restrict);
 
+                // Global query filter for soft delete
                 entity.HasQueryFilter(cb => !cb.IsDeleted);
             });
 
+            // Seed Data
             modelBuilder.Entity<Book>().HasData(
                 new Book
                 {

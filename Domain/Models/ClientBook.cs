@@ -9,13 +9,13 @@ namespace Domain.Models
         [Range(1, int.MaxValue, ErrorMessage = "Client ID must be greater than 0")]
         public int ClientId { get; set; }
 
-        public Client Client { get; set; } = null!;
+        public Client? Client { get; set; }
 
         [Required(ErrorMessage = "Book ID is required")]
         [Range(1, int.MaxValue, ErrorMessage = "Book ID must be greater than 0")]
         public int BookId { get; set; }
 
-        public Book Book { get; set; } = null!;
+        public Book? Book { get; set; }
 
         [Required(ErrorMessage = "Borrowed date is required")]
         [DataType(DataType.DateTime)]

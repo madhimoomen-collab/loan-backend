@@ -16,7 +16,7 @@ namespace Domain.Models
         /// <summary>
         /// Navigation property to Client
         /// </summary>
-        public Client Client { get; set; } = null!;
+        public Client? Client { get; set; }
 
         [Required(ErrorMessage = "Book ID is required")]
         [Range(1, int.MaxValue, ErrorMessage = "Book ID must be greater than 0")]
@@ -25,7 +25,7 @@ namespace Domain.Models
         /// <summary>
         /// Navigation property to Book
         /// </summary>
-        public Book Book { get; set; } = null!;
+        public Book? Book { get; set; }
 
         [Required(ErrorMessage = "Reservation date is required")]
         [DataType(DataType.DateTime)]

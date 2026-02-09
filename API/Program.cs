@@ -38,14 +38,14 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // 4. Register Generic Repository
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
-// 5. Register MediatR - This finds the handlers but doesn't auto-register generics in v12+
+// 5. Register MediatR
 builder.Services.AddMediatR(cfg =>
 {
     cfg.RegisterServicesFromAssembly(typeof(Book).Assembly);
 });
 
-// 6. IMPORTANT: Manually register generic handlers for each entity
-// This is necessary for MediatR 12+ with open generic handlers
+// 6. Manually register generic handlers for each entity
+
 // Book handlers
 builder.Services.AddScoped<IRequestHandler<GetListGenericQuery<Book>, IEnumerable<Book>>, GetListGenericHandler<Book>>();
 builder.Services.AddScoped<IRequestHandler<GetGenericQuery<Book>, Book?>, GetGenericHandler<Book>>();
@@ -66,6 +66,13 @@ builder.Services.AddScoped<IRequestHandler<GetGenericQuery<ClientBook>, ClientBo
 builder.Services.AddScoped<IRequestHandler<AddGenericCommand<ClientBook>, ClientBook>, AddGenericHandler<ClientBook>>();
 builder.Services.AddScoped<IRequestHandler<UpdateGenericCommand<ClientBook>, ClientBook>, UpdateGenericHandler<ClientBook>>();
 builder.Services.AddScoped<IRequestHandler<DeleteGenericCommand<ClientBook>, bool>, DeleteGenericHandler<ClientBook>>();
+
+// Reservation handlers (NEW)
+builder.Services.AddScoped<IRequestHandler<GetListGenericQuery<Reservation>, IEnumerable<Reservation>>, GetListGenericHandler<Reservation>>();
+builder.Services.AddScoped<IRequestHandler<GetGenericQuery<Reservation>, Reservation?>, GetGenericHandler<Reservation>>();
+builder.Services.AddScoped<IRequestHandler<AddGenericCommand<Reservation>, Reservation>, AddGenericHandler<Reservation>>();
+builder.Services.AddScoped<IRequestHandler<UpdateGenericCommand<Reservation>, Reservation>, UpdateGenericHandler<Reservation>>();
+builder.Services.AddScoped<IRequestHandler<DeleteGenericCommand<Reservation>, bool>, DeleteGenericHandler<Reservation>>();
 
 // 7. Register AutoMapper
 builder.Services.AddAutoMapper(typeof(BookMappingProfile).Assembly);
@@ -102,5 +109,6 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Logger.LogInformation("🚀 Workflow Management API Started!");
+app.Logger.LogInformation("📚 Endpoints: Books, Clients, ClientBooks, Reservations");
 
 app.Run();

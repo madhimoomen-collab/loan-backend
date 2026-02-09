@@ -13,6 +13,7 @@ namespace Data.Context
         public DbSet<Book> Books { get; set; }
         public DbSet<Client> Clients { get; set; }
         public DbSet<ClientBook> ClientBooks { get; set; }
+        public DbSet<Reservation> Reservations { get; set; } // NEW
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -27,9 +28,7 @@ namespace Data.Context
                 entity.Property(e => e.Author).IsRequired().HasMaxLength(100);
                 entity.Property(e => e.Category).HasMaxLength(50);
 
-                // Global query filter for soft delete
                 entity.HasQueryFilter(b => !b.IsDeleted);
-
                 entity.HasIndex(e => e.ISBN).IsUnique();
             });
 
@@ -43,10 +42,7 @@ namespace Data.Context
                 entity.Property(e => e.PhoneNumber).HasMaxLength(20);
                 entity.Property(e => e.Address).HasMaxLength(300);
 
-                // FIXED: Added query filter for soft delete (was missing!)
                 entity.HasQueryFilter(c => !c.IsDeleted);
-
-                // Add unique constraint on Email
                 entity.HasIndex(e => e.Email).IsUnique();
             });
 
@@ -54,11 +50,8 @@ namespace Data.Context
             modelBuilder.Entity<ClientBook>(entity =>
             {
                 entity.HasKey(e => e.Id);
-
-                // UNIQUE constraint on ClientId + BookId to prevent duplicate borrowing
                 entity.HasIndex(e => new { e.ClientId, e.BookId }).IsUnique();
 
-                // Configure relationships
                 entity.HasOne(cb => cb.Client)
                       .WithMany()
                       .HasForeignKey(cb => cb.ClientId)
@@ -69,8 +62,39 @@ namespace Data.Context
                       .HasForeignKey(cb => cb.BookId)
                       .OnDelete(DeleteBehavior.Restrict);
 
-                // Global query filter for soft delete
                 entity.HasQueryFilter(cb => !cb.IsDeleted);
+            });
+
+            // Configure Reservation Entity (NEW)
+            modelBuilder.Entity<Reservation>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.ReservationDate).IsRequired();
+                entity.Property(e => e.ExpiryDate).IsRequired();
+                entity.Property(e => e.Status).IsRequired();
+                entity.Property(e => e.Notes).HasMaxLength(500);
+
+                // Relationships
+                entity.HasOne(r => r.Client)
+                      .WithMany()
+                      .HasForeignKey(r => r.ClientId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(r => r.Book)
+                      .WithMany()
+                      .HasForeignKey(r => r.BookId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                // Indexes for performance
+                entity.HasIndex(e => e.ClientId);
+                entity.HasIndex(e => e.BookId);
+                entity.HasIndex(e => e.Status);
+                entity.HasIndex(e => e.ExpiryDate);
+                entity.HasIndex(e => new { e.ClientId, e.BookId, e.Status });
+
+                // Soft delete filter
+                entity.HasQueryFilter(r => !r.IsDeleted);
             });
 
             // Seed Data

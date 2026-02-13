@@ -75,7 +75,7 @@ builder.Services.AddScoped<IRequestHandler<UpdateGenericCommand<Reservation>, Re
 builder.Services.AddScoped<IRequestHandler<DeleteGenericCommand<Reservation>, bool>, DeleteGenericHandler<Reservation>>();
 
 // 7. Register AutoMapper
-builder.Services.AddAutoMapper(typeof(BookMappingProfile).Assembly);
+builder.Services.AddAutoMapper(typeof(ReservationMappingProfile).Assembly);
 
 // 8. Add CORS
 builder.Services.AddCors(options =>

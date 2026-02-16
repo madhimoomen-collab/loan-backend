@@ -4,6 +4,7 @@ using Data.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260209125854_AddReservationsTable")]
+    partial class AddReservationsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -194,11 +197,8 @@ namespace Data.Migrations
 
                     b.HasIndex("BookId");
 
-                    b.HasIndex("ClientId");
-
-                    b.HasIndex("ClientId", "BookId", "IsReturned")
-                        .HasDatabaseName("IX_ClientBooks_ClientId_BookId_IsReturned")
-                        .HasFilter("[IsReturned] = 0 AND [IsDeleted] = 0");
+                    b.HasIndex("ClientId", "BookId")
+                        .IsUnique();
 
                     b.ToTable("ClientBooks");
                 });
@@ -216,9 +216,6 @@ namespace Data.Migrations
 
                     b.Property<DateTime?>("CancelledDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<int?>("ClientBookId")
-                        .HasColumnType("int");
 
                     b.Property<int>("ClientId")
                         .HasColumnType("int");
@@ -251,10 +248,6 @@ namespace Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("BookId");
-
-                    b.HasIndex("ClientBookId")
-                        .IsUnique()
-                        .HasFilter("[ClientBookId] IS NOT NULL");
 
                     b.HasIndex("ClientId");
 
@@ -294,11 +287,6 @@ namespace Data.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Domain.Models.ClientBook", "ClientBook")
-                        .WithOne()
-                        .HasForeignKey("Domain.Models.Reservation", "ClientBookId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("Domain.Models.Client", "Client")
                         .WithMany()
                         .HasForeignKey("ClientId")
@@ -308,8 +296,6 @@ namespace Data.Migrations
                     b.Navigation("Book");
 
                     b.Navigation("Client");
-
-                    b.Navigation("ClientBook");
                 });
 #pragma warning restore 612, 618
         }

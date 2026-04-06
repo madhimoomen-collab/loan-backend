@@ -14,7 +14,7 @@ namespace Domain.Queries
     public class GetGenericQuery<T> : IRequest<T?> where T : BaseEntity
     {
         /// <summary>
-        /// Filter condition (e.g., x => x.Id == 5 or x => x.Email == "test@test.com")
+        /// Filter condition (e.g., x => x.Id == someGuid or x => x.Email == "test@test.com")
         /// </summary>
         public Expression<Func<T, bool>> Condition { get; }
 
@@ -41,7 +41,7 @@ namespace Domain.Queries
         /// Convenience constructor for ID-based queries
         /// </summary>
         /// <param name="id">Entity ID</param>
-        public GetGenericQuery(int id)
+        public GetGenericQuery(Guid id)
             : this(entity => entity.Id == id, null)
         {
         }

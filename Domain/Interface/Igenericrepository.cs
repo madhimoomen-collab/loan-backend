@@ -18,7 +18,7 @@ namespace Domain.Interface
         /// <summary>
         /// Get a single entity by ID
         /// </summary>
-        Task<T?> GetByIdAsync(int id);
+        Task<T?> GetByIdAsync(Guid id);
 
         /// <summary>
         /// Get all entities (respects soft delete filter)
@@ -66,7 +66,7 @@ namespace Domain.Interface
         /// <summary>
         /// Soft delete an entity by ID
         /// </summary>
-        Task<bool> DeleteAsync(int id);
+        Task<bool> DeleteAsync(Guid id);
 
         /// <summary>
         /// Save changes to database

@@ -24,11 +24,19 @@ namespace Data.Context
             modelBuilder.Entity<LoanApplication>(entity =>
             {
                 entity.HasKey(e => e.Id);
+                entity.Property(e => e.ApplicantId).IsRequired();
                 entity.Property(e => e.ApplicantName).IsRequired().HasMaxLength(120);
                 entity.Property(e => e.RequestedAmount).HasColumnType("decimal(18,2)");
                 entity.Property(e => e.MonthlyIncome).HasColumnType("decimal(18,2)");
                 entity.Property(e => e.DecisionReason).HasMaxLength(500);
                 entity.Property(e => e.Status).IsRequired();
+
+                entity.HasOne(e => e.Applicant)
+                      .WithMany()
+                      .HasForeignKey(e => e.ApplicantId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(e => e.ApplicantId);
 
                 entity.HasQueryFilter(e => !e.IsDeleted);
             });

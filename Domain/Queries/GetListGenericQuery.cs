@@ -32,6 +32,10 @@ namespace Domain.Queries
         /// </summary>
         public Func<IQueryable<T>, IOrderedQueryable<T>>? OrderBy { get; }
 
+        public int Page { get; }
+        public int PageSize { get; }
+        public int Skip => (Page - 1) * PageSize;
+
         /// <summary>
         /// Constructor for flexible querying
         /// </summary>
@@ -41,11 +45,15 @@ namespace Domain.Queries
         public GetListGenericQuery(
             Expression<Func<T, bool>>? condition = null,
             Func<IQueryable<T>, IIncludableQueryable<T, object?>>? includes = null,
-            Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null)
+            Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null,
+            int page = 1,
+            int pageSize = 20)
         {
             Condition = condition;
             Includes = includes;
             OrderBy = orderBy;
+            Page = page < 1 ? 1 : page;
+            PageSize = pageSize < 1 ? 20 : pageSize;
         }
     }
 }

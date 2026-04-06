@@ -44,7 +44,9 @@ namespace Domain.Interface
         Task<IEnumerable<T>> FindAsync(
             Expression<Func<T, bool>>? predicate = null,
             Func<IQueryable<T>, IIncludableQueryable<T, object?>>? includes = null,
-            Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null);
+            Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null,
+            int? skip = null,
+            int? take = null);
 
         /// <summary>
         /// NEW: Get a single entity with advanced includes

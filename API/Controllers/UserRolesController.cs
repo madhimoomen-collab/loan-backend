@@ -2,12 +2,14 @@ using Domain.Commands;
 using Domain.Models;
 using Domain.Queries;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class UserRolesController : ControllerBase
 {
     private readonly IMediator _mediator;

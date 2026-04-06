@@ -50,7 +50,9 @@ public class GenericRepository<T> : IGenericRepository<T> where T : BaseEntity
     public async Task<IEnumerable<T>> FindAsync(
         Expression<Func<T, bool>>? predicate = null,
         Func<IQueryable<T>, IIncludableQueryable<T, object?>>? includes = null,
-        Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null)
+        Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null,
+        int? skip = null,
+        int? take = null)
     {
         IQueryable<T> query = _dbSet;
 
@@ -67,6 +69,16 @@ public class GenericRepository<T> : IGenericRepository<T> where T : BaseEntity
         if (orderBy != null)
         {
             query = orderBy(query);
+        }
+
+        if (skip.HasValue)
+        {
+            query = query.Skip(skip.Value);
+        }
+
+        if (take.HasValue)
+        {
+            query = query.Take(take.Value);
         }
 
         return await query.ToListAsync();

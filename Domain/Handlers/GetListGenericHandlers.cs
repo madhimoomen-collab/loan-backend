@@ -27,7 +27,9 @@ namespace Domain.Handlers
             return await _repository.FindAsync(
                 predicate: request.Condition,
                 includes: request.Includes,
-                orderBy: request.OrderBy
+                orderBy: request.OrderBy,
+                skip: request.Skip,
+                take: request.PageSize
             );
         }
     }

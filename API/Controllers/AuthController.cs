@@ -1,5 +1,6 @@
 using Domain.Commands;
 using Domain.DTOs;
+using Domain.Interface;
 using Domain.Models;
 using Domain.Queries;
 using MediatR;
@@ -13,10 +14,12 @@ namespace API.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly IJwtService _jwtService;
 
-    public AuthController(IMediator mediator)
+    public AuthController(IMediator mediator, IJwtService jwtService)
     {
         _mediator = mediator;
+        _jwtService = jwtService;
     }
 
     [HttpPost("signup")]
@@ -45,12 +48,15 @@ public class AuthController : ControllerBase
         };
 
         var createdUser = await _mediator.Send(new AddGenericCommand<User>(user));
+        var fullName = $"{createdUser.FirstName} {createdUser.LastName}";
+        var token = _jwtService.GenerateToken(createdUser.Id, createdUser.Email, fullName);
 
         return Ok(new AuthResponseDto
         {
             UserId = createdUser.Id,
             Email = createdUser.Email,
-            FullName = $"{createdUser.FirstName} {createdUser.LastName}",
+            FullName = fullName,
+            Token = token,
             Message = "Signup successful."
         });
     }
@@ -72,11 +78,15 @@ public class AuthController : ControllerBase
             return Unauthorized("Invalid email or password.");
         }
 
+        var fullName = $"{user.FirstName} {user.LastName}";
+        var token = _jwtService.GenerateToken(user.Id, user.Email, fullName);
+
         return Ok(new AuthResponseDto
         {
             UserId = user.Id,
             Email = user.Email,
-            FullName = $"{user.FirstName} {user.LastName}",
+            FullName = fullName,
+            Token = token,
             Message = "Login successful."
         });
     }
@@ -103,11 +113,15 @@ public class AuthController : ControllerBase
 
         var updatedUser = await _mediator.Send(new UpdateGenericCommand<User>(user));
 
+        var fullName = $"{updatedUser.FirstName} {updatedUser.LastName}";
+        var token = _jwtService.GenerateToken(updatedUser.Id, updatedUser.Email, fullName);
+
         return Ok(new AuthResponseDto
         {
             UserId = updatedUser.Id,
             Email = updatedUser.Email,
-            FullName = $"{updatedUser.FirstName} {updatedUser.LastName}",
+            FullName = fullName,
+            Token = token,
             Message = "Password changed successfully."
         });
     }

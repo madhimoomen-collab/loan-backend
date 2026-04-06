@@ -5,6 +5,7 @@ namespace Domain.DTOs;
 public class LoanApplicationDto
 {
     public Guid Id { get; set; }
+    public Guid ApplicantId { get; set; }
     public string ApplicantName { get; set; } = string.Empty;
     public decimal RequestedAmount { get; set; }
     public decimal MonthlyIncome { get; set; }

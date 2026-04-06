@@ -4,6 +4,7 @@ using Domain.DTOs;
 using Domain.Models;
 using Domain.Queries;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,6 +12,7 @@ namespace API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class LoanApprovalsController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -23,10 +25,12 @@ public class LoanApprovalsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<LoanApplicationDto>>> GetAll()
+    public async Task<ActionResult<IEnumerable<LoanApplicationDto>>> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
         var query = new GetListGenericQuery<LoanApplication>(
-            orderBy: q => q.OrderByDescending(x => x.CreatedDate));
+            orderBy: q => q.OrderByDescending(x => x.CreatedDate),
+            page: page,
+            pageSize: pageSize);
 
         var result = await _mediator.Send(query);
         return Ok(_mapper.Map<IEnumerable<LoanApplicationDto>>(result));
@@ -60,7 +64,14 @@ public class LoanApprovalsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<LoanApplicationDto>> Create([FromBody] CreateLoanApplicationDto model)
     {
+        var applicant = await _mediator.Send(new GetGenericQuery<User>(model.ApplicantId));
+        if (applicant == null)
+        {
+            return BadRequest("Applicant user was not found.");
+        }
+
         var entity = _mapper.Map<LoanApplication>(model);
+        entity.ApplicantName = $"{applicant.FirstName} {applicant.LastName}";
         entity.Status = LoanApprovalStatus.Pending;
         entity.DecisionDate = null;
         entity.DecisionReason = null;
@@ -125,6 +136,25 @@ public class LoanApprovalsController : ControllerBase
         return Ok(_mapper.Map<IEnumerable<LoanApplicationDto>>(loans));
     }
 
+    [HttpPost("{id:guid}/under-review")]
+    public async Task<ActionResult<LoanApplicationDto>> MarkUnderReview(Guid id)
+    {
+        var loan = await _mediator.Send(new GetGenericQuery<LoanApplication>(id));
+        if (loan == null)
+        {
+            return NotFound();
+        }
+
+        if (loan.Status != LoanApprovalStatus.Pending)
+        {
+            return BadRequest("Only pending loans can be marked as under review.");
+        }
+
+        loan.Status = LoanApprovalStatus.UnderReview;
+        var result = await _mediator.Send(new UpdateGenericCommand<LoanApplication>(loan));
+        return Ok(_mapper.Map<LoanApplicationDto>(result));
+    }
+
     [HttpPost("{id:guid}/process")]
     public async Task<ActionResult<LoanApplicationDto>> Process(Guid id)
     {
@@ -136,9 +166,15 @@ public class LoanApprovalsController : ControllerBase
             return NotFound();
         }
 
-        if (loan.Status != LoanApprovalStatus.Pending)
+        if (loan.Status == LoanApprovalStatus.Pending)
         {
-            return BadRequest("Loan application is already processed.");
+            loan.Status = LoanApprovalStatus.UnderReview;
+            loan = await _mediator.Send(new UpdateGenericCommand<LoanApplication>(loan));
+        }
+
+        if (loan.Status != LoanApprovalStatus.UnderReview)
+        {
+            return BadRequest("Loan application must be under review to process.");
         }
 
         var reasons = new List<string>();

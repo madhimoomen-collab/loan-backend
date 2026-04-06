@@ -5,12 +5,16 @@ namespace Domain.Models;
 public enum LoanApprovalStatus
 {
     Pending = 0,
-    Approved = 1,
-    Rejected = 2
+    UnderReview = 1,
+    Approved = 2,
+    Rejected = 3
 }
 
 public class LoanApplication : BaseEntity
 {
+    public Guid ApplicantId { get; set; }
+    public User? Applicant { get; set; }
+
     [Required]
     [MaxLength(120)]
     public string ApplicantName { get; set; } = string.Empty;

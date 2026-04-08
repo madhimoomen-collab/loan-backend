@@ -5,6 +5,7 @@ using Domain.Models;
 using Domain.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 
 namespace API.Controllers;
@@ -49,7 +50,8 @@ public class AuthController : ControllerBase
 
         var createdUser = await _mediator.Send(new AddGenericCommand<User>(user));
         var fullName = $"{createdUser.FirstName} {createdUser.LastName}";
-        var token = _jwtService.GenerateToken(createdUser.Id, createdUser.Email, fullName);
+        var roles = await GetUserRoleNames(createdUser.Id);
+        var token = _jwtService.GenerateToken(createdUser.Id, createdUser.Email, fullName, roles);
 
         return Ok(new AuthResponseDto
         {
@@ -79,7 +81,8 @@ public class AuthController : ControllerBase
         }
 
         var fullName = $"{user.FirstName} {user.LastName}";
-        var token = _jwtService.GenerateToken(user.Id, user.Email, fullName);
+        var roles = await GetUserRoleNames(user.Id);
+        var token = _jwtService.GenerateToken(user.Id, user.Email, fullName, roles);
 
         return Ok(new AuthResponseDto
         {
@@ -114,7 +117,8 @@ public class AuthController : ControllerBase
         var updatedUser = await _mediator.Send(new UpdateGenericCommand<User>(user));
 
         var fullName = $"{updatedUser.FirstName} {updatedUser.LastName}";
-        var token = _jwtService.GenerateToken(updatedUser.Id, updatedUser.Email, fullName);
+        var roles = await GetUserRoleNames(updatedUser.Id);
+        var token = _jwtService.GenerateToken(updatedUser.Id, updatedUser.Email, fullName, roles);
 
         return Ok(new AuthResponseDto
         {
@@ -143,5 +147,18 @@ public class AuthController : ControllerBase
         var storedHashBytes = Convert.FromBase64String(storedHash);
 
         return CryptographicOperations.FixedTimeEquals(storedHashBytes, computedHash);
+    }
+
+    private async Task<IEnumerable<string>> GetUserRoleNames(Guid userId)
+    {
+        var userRoles = await _mediator.Send(new GetListGenericQuery<UserRole>(
+            condition: x => x.UserId == userId,
+            includes: q => q.Include(x => x.Role)));
+
+        return userRoles
+            .Where(x => x.Role != null)
+            .Select(x => x.Role!.Name)
+            .Distinct()
+            .ToList();
     }
 }

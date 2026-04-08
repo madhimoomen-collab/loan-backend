@@ -16,7 +16,7 @@ public class JwtService : IJwtService
         _configuration = configuration;
     }
 
-    public string GenerateToken(Guid userId, string email, string fullName)
+    public string GenerateToken(Guid userId, string email, string fullName, IEnumerable<string> roles)
     {
         var jwtSection = _configuration.GetSection("Jwt");
         var key = jwtSection["Key"] ?? throw new InvalidOperationException("JWT Key is missing.");
@@ -24,13 +24,18 @@ public class JwtService : IJwtService
         var audience = jwtSection["Audience"] ?? throw new InvalidOperationException("JWT Audience is missing.");
         var expiryMinutes = int.TryParse(jwtSection["ExpiryMinutes"], out var minutes) ? minutes : 60;
 
-        var claims = new[]
+        var claims = new List<Claim>
         {
             new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, email),
             new Claim(JwtRegisteredClaimNames.Name, fullName),
             new Claim(ClaimTypes.NameIdentifier, userId.ToString())
         };
+
+        foreach (var role in roles)
+        {
+            claims.Add(new Claim(ClaimTypes.Role, role));
+        }
 
         var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
         var creds = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);

@@ -2,5 +2,5 @@ namespace Domain.Interface;
 
 public interface IJwtService
 {
-    string GenerateToken(Guid userId, string email, string fullName);
+    string GenerateToken(Guid userId, string email, string fullName, IEnumerable<string> roles);
 }

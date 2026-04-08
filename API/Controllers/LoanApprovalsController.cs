@@ -7,6 +7,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace API.Controllers;
 
@@ -114,7 +115,30 @@ public class LoanApprovalsController : ControllerBase
         return NoContent();
     }
 
+    [HttpGet("my-loans")]
+    public async Task<ActionResult<IEnumerable<LoanApplicationDto>>> GetMyLoans()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userIdClaim == null || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized();
+        }
+
+        var userLoans = await _mediator.Send(new GetListGenericQuery<UserLoan>(
+            condition: x => x.UserId == userId,
+            includes: q => q.Include(x => x.LoanApplication),
+            orderBy: q => q.OrderByDescending(x => x.CreatedDate)));
+
+        var loans = userLoans
+            .Where(x => x.LoanApplication != null)
+            .Select(x => x.LoanApplication!)
+            .ToList();
+
+        return Ok(_mapper.Map<IEnumerable<LoanApplicationDto>>(loans));
+    }
+
     [HttpGet("user/{userId:guid}")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<IEnumerable<LoanApplicationDto>>> GetLoansByUser(Guid userId)
     {
         var user = await _mediator.Send(new GetGenericQuery<User>(userId));

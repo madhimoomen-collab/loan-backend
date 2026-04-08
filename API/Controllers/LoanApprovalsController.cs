@@ -1,6 +1,7 @@
 using AutoMapper;
 using Domain.Commands;
 using Domain.DTOs;
+using Domain.Interface;
 using Domain.Models;
 using Domain.Queries;
 using MediatR;
@@ -18,15 +19,20 @@ public class LoanApprovalsController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly IMapper _mapper;
+    private readonly IGenericRepository<LoanApplication> _loanRepository;
 
-    public LoanApprovalsController(IMediator mediator, IMapper mapper)
+    public LoanApprovalsController(
+        IMediator mediator,
+        IMapper mapper,
+        IGenericRepository<LoanApplication> loanRepository)
     {
         _mediator = mediator;
         _mapper = mapper;
+        _loanRepository = loanRepository;
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<LoanApplicationDto>>> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    public async Task<ActionResult<PagedResult<LoanApplicationDto>>> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
         var query = new GetListGenericQuery<LoanApplication>(
             orderBy: q => q.OrderByDescending(x => x.CreatedDate),
@@ -34,7 +40,14 @@ public class LoanApprovalsController : ControllerBase
             pageSize: pageSize);
 
         var result = await _mediator.Send(query);
-        return Ok(_mapper.Map<IEnumerable<LoanApplicationDto>>(result));
+        var totalCount = await _loanRepository.CountAsync();
+        return Ok(new PagedResult<LoanApplicationDto>
+        {
+            Items = _mapper.Map<IEnumerable<LoanApplicationDto>>(result),
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize
+        });
     }
 
     [HttpGet("{id:guid}")]
@@ -65,13 +78,20 @@ public class LoanApprovalsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<LoanApplicationDto>> Create([FromBody] CreateLoanApplicationDto model)
     {
-        var applicant = await _mediator.Send(new GetGenericQuery<User>(model.ApplicantId));
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userIdClaim == null || !Guid.TryParse(userIdClaim, out var applicantId))
+        {
+            return Unauthorized();
+        }
+
+        var applicant = await _mediator.Send(new GetGenericQuery<User>(applicantId));
         if (applicant == null)
         {
             return BadRequest("Applicant user was not found.");
         }
 
         var entity = _mapper.Map<LoanApplication>(model);
+        entity.ApplicantId = applicant.Id;
         entity.ApplicantName = $"{applicant.FirstName} {applicant.LastName}";
         entity.Status = LoanApprovalStatus.Pending;
         entity.DecisionDate = null;
@@ -84,6 +104,7 @@ public class LoanApprovalsController : ControllerBase
     }
 
     [HttpPost("{loanId:guid}/assign/{userId:guid}")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult> AssignLoanToUser(Guid loanId, Guid userId)
     {
         var user = await _mediator.Send(new GetGenericQuery<User>(userId));
@@ -161,6 +182,7 @@ public class LoanApprovalsController : ControllerBase
     }
 
     [HttpPost("{id:guid}/under-review")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<LoanApplicationDto>> MarkUnderReview(Guid id)
     {
         var loan = await _mediator.Send(new GetGenericQuery<LoanApplication>(id));
@@ -180,6 +202,7 @@ public class LoanApprovalsController : ControllerBase
     }
 
     [HttpPost("{id:guid}/process")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<LoanApplicationDto>> Process(Guid id)
     {
         var query = new GetGenericQuery<LoanApplication>(id);

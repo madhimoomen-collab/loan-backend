@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using FluentValidation;
 
 namespace API.Middleware;
 
@@ -19,6 +20,20 @@ public class GlobalExceptionMiddleware
         try
         {
             await _next(context);
+        }
+        catch (ValidationException ex)
+        {
+            _logger.LogWarning(ex, "Validation error occurred.");
+            context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+            context.Response.ContentType = "application/json";
+
+            var response = JsonSerializer.Serialize(new
+            {
+                message = "Validation failed.",
+                errors = ex.Errors.Select(e => new { e.PropertyName, e.ErrorMessage })
+            });
+
+            await context.Response.WriteAsync(response);
         }
         catch (Exception ex)
         {

@@ -9,7 +9,6 @@ public class AddLoanApplicationCommandValidator : AbstractValidator<AddGenericCo
     public AddLoanApplicationCommandValidator()
     {
         RuleFor(x => x.Entity.ApplicantId).NotEmpty();
-        RuleFor(x => x.Entity.ApplicantName).NotEmpty().MaximumLength(120);
         RuleFor(x => x.Entity.RequestedAmount).GreaterThan(0);
         RuleFor(x => x.Entity.MonthlyIncome).GreaterThan(0);
         RuleFor(x => x.Entity.CreditScore).InclusiveBetween(300, 900);

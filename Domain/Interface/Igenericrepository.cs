@@ -55,6 +55,8 @@ namespace Domain.Interface
             Expression<Func<T, bool>> predicate,
             Func<IQueryable<T>, IIncludableQueryable<T, object?>>? includes = null);
 
+        Task<int> CountAsync(Expression<Func<T, bool>>? predicate = null);
+
         /// <summary>
         /// Add a new entity
         /// </summary>

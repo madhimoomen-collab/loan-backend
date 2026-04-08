@@ -58,6 +58,7 @@ public class AuthController : ControllerBase
             UserId = createdUser.Id,
             Email = createdUser.Email,
             FullName = fullName,
+            Roles = roles.ToList(),
             Token = token,
             Message = "Signup successful."
         });
@@ -89,6 +90,7 @@ public class AuthController : ControllerBase
             UserId = user.Id,
             Email = user.Email,
             FullName = fullName,
+            Roles = roles.ToList(),
             Token = token,
             Message = "Login successful."
         });
@@ -125,6 +127,7 @@ public class AuthController : ControllerBase
             UserId = updatedUser.Id,
             Email = updatedUser.Email,
             FullName = fullName,
+            Roles = roles.ToList(),
             Token = token,
             Message = "Password changed successfully."
         });

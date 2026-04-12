@@ -77,12 +77,41 @@ builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssembly(typeof(LoanApplication).Assembly);
 });
 
-// 6. Register open generic handlers
-builder.Services.AddScoped(typeof(IRequestHandler<,>), typeof(GetListGenericHandler<>));
-builder.Services.AddScoped(typeof(IRequestHandler<,>), typeof(GetGenericHandler<>));
-builder.Services.AddScoped(typeof(IRequestHandler<,>), typeof(AddGenericHandler<>));
-builder.Services.AddScoped(typeof(IRequestHandler<,>), typeof(UpdateGenericHandler<>));
-builder.Services.AddScoped(typeof(IRequestHandler<,>), typeof(DeleteGenericHandler<>));
+// 6. Register generic handlers for current entities
+// LoanApplication handlers
+builder.Services.AddScoped<IRequestHandler<GetListGenericQuery<LoanApplication>, IEnumerable<LoanApplication>>, GetListGenericHandler<LoanApplication>>();
+builder.Services.AddScoped<IRequestHandler<GetGenericQuery<LoanApplication>, LoanApplication?>, GetGenericHandler<LoanApplication>>();
+builder.Services.AddScoped<IRequestHandler<AddGenericCommand<LoanApplication>, LoanApplication>, AddGenericHandler<LoanApplication>>();
+builder.Services.AddScoped<IRequestHandler<UpdateGenericCommand<LoanApplication>, LoanApplication>, UpdateGenericHandler<LoanApplication>>();
+builder.Services.AddScoped<IRequestHandler<DeleteGenericCommand<LoanApplication>, bool>, DeleteGenericHandler<LoanApplication>>();
+
+// User handlers
+builder.Services.AddScoped<IRequestHandler<GetListGenericQuery<User>, IEnumerable<User>>, GetListGenericHandler<User>>();
+builder.Services.AddScoped<IRequestHandler<GetGenericQuery<User>, User?>, GetGenericHandler<User>>();
+builder.Services.AddScoped<IRequestHandler<AddGenericCommand<User>, User>, AddGenericHandler<User>>();
+builder.Services.AddScoped<IRequestHandler<UpdateGenericCommand<User>, User>, UpdateGenericHandler<User>>();
+builder.Services.AddScoped<IRequestHandler<DeleteGenericCommand<User>, bool>, DeleteGenericHandler<User>>();
+
+// Role handlers
+builder.Services.AddScoped<IRequestHandler<GetListGenericQuery<Role>, IEnumerable<Role>>, GetListGenericHandler<Role>>();
+builder.Services.AddScoped<IRequestHandler<GetGenericQuery<Role>, Role?>, GetGenericHandler<Role>>();
+builder.Services.AddScoped<IRequestHandler<AddGenericCommand<Role>, Role>, AddGenericHandler<Role>>();
+builder.Services.AddScoped<IRequestHandler<UpdateGenericCommand<Role>, Role>, UpdateGenericHandler<Role>>();
+builder.Services.AddScoped<IRequestHandler<DeleteGenericCommand<Role>, bool>, DeleteGenericHandler<Role>>();
+
+// UserRole handlers
+builder.Services.AddScoped<IRequestHandler<GetListGenericQuery<UserRole>, IEnumerable<UserRole>>, GetListGenericHandler<UserRole>>();
+builder.Services.AddScoped<IRequestHandler<GetGenericQuery<UserRole>, UserRole?>, GetGenericHandler<UserRole>>();
+builder.Services.AddScoped<IRequestHandler<AddGenericCommand<UserRole>, UserRole>, AddGenericHandler<UserRole>>();
+builder.Services.AddScoped<IRequestHandler<UpdateGenericCommand<UserRole>, UserRole>, UpdateGenericHandler<UserRole>>();
+builder.Services.AddScoped<IRequestHandler<DeleteGenericCommand<UserRole>, bool>, DeleteGenericHandler<UserRole>>();
+
+// UserLoan handlers
+builder.Services.AddScoped<IRequestHandler<GetListGenericQuery<UserLoan>, IEnumerable<UserLoan>>, GetListGenericHandler<UserLoan>>();
+builder.Services.AddScoped<IRequestHandler<GetGenericQuery<UserLoan>, UserLoan?>, GetGenericHandler<UserLoan>>();
+builder.Services.AddScoped<IRequestHandler<AddGenericCommand<UserLoan>, UserLoan>, AddGenericHandler<UserLoan>>();
+builder.Services.AddScoped<IRequestHandler<UpdateGenericCommand<UserLoan>, UserLoan>, UpdateGenericHandler<UserLoan>>();
+builder.Services.AddScoped<IRequestHandler<DeleteGenericCommand<UserLoan>, bool>, DeleteGenericHandler<UserLoan>>();
 
 // 7. Validation pipeline
 builder.Services.AddValidatorsFromAssembly(typeof(LoanApplication).Assembly);

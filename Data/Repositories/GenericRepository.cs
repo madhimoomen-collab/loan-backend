@@ -131,7 +131,7 @@ public class GenericRepository<T> : IGenericRepository<T> where T : BaseEntity
         }
 
         entity.IsDeleted = true;
-        entity.UpdatedDate = DateTime.Now;
+        entity.UpdatedDate = DateTime.UtcNow;
         _dbSet.Update(entity);
 
         return true;

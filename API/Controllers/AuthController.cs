@@ -3,6 +3,7 @@ using Domain.DTOs;
 using Domain.Interface;
 using Domain.Models;
 using Domain.Queries;
+using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -16,16 +17,33 @@ public class AuthController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly IJwtService _jwtService;
+    private readonly IValidator<SignupRequestDto> _signupValidator;
+    private readonly IValidator<LoginRequestDto> _loginValidator;
+    private readonly IValidator<ChangePasswordRequestDto> _changePasswordValidator;
 
-    public AuthController(IMediator mediator, IJwtService jwtService)
+    public AuthController(
+        IMediator mediator,
+        IJwtService jwtService,
+        IValidator<SignupRequestDto> signupValidator,
+        IValidator<LoginRequestDto> loginValidator,
+        IValidator<ChangePasswordRequestDto> changePasswordValidator)
     {
         _mediator = mediator;
         _jwtService = jwtService;
+        _signupValidator = signupValidator;
+        _loginValidator = loginValidator;
+        _changePasswordValidator = changePasswordValidator;
     }
 
     [HttpPost("signup")]
     public async Task<ActionResult<AuthResponseDto>> Signup([FromBody] SignupRequestDto request)
     {
+        var signupValidation = await _signupValidator.ValidateAsync(request);
+        if (!signupValidation.IsValid)
+        {
+            return BadRequest(signupValidation.Errors.Select(e => e.ErrorMessage));
+        }
+
         var existingUsers = await _mediator.Send(new GetListGenericQuery<User>(
             condition: x => x.Email == request.Email));
 
@@ -67,6 +85,12 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<ActionResult<AuthResponseDto>> Login([FromBody] LoginRequestDto request)
     {
+        var loginValidation = await _loginValidator.ValidateAsync(request);
+        if (!loginValidation.IsValid)
+        {
+            return BadRequest(loginValidation.Errors.Select(e => e.ErrorMessage));
+        }
+
         var users = await _mediator.Send(new GetListGenericQuery<User>(
             condition: x => x.Email == request.Email && x.IsActive));
 
@@ -99,6 +123,12 @@ public class AuthController : ControllerBase
     [HttpPost("change-password")]
     public async Task<ActionResult<AuthResponseDto>> ChangePassword([FromBody] ChangePasswordRequestDto request)
     {
+        var changePasswordValidation = await _changePasswordValidator.ValidateAsync(request);
+        if (!changePasswordValidation.IsValid)
+        {
+            return BadRequest(changePasswordValidation.Errors.Select(e => e.ErrorMessage));
+        }
+
         var user = await _mediator.Send(new GetGenericQuery<User>(request.UserId));
         if (user == null || !user.IsActive)
         {

@@ -245,7 +245,7 @@ public class LoanApprovalsController : ControllerBase
             reasons.Add("Requested amount exceeds affordability threshold");
         }
 
-        loan.DecisionDate = DateTime.Now;
+        loan.DecisionDate = DateTime.UtcNow;
 
         if (reasons.Count == 0)
         {
